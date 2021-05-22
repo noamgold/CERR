@@ -1,4 +1,4 @@
-function connPtMask3M = getPatientOutline(scan3M,slicesV,outThreshold,minMaskSiz)
+function connPtMask3M = getPatientOutline(scan3M,slicesV,outThreshold,minMaskSiz,fillFact)
 % Returns mask of patient's outline
 %
 % Usage:
@@ -10,6 +10,7 @@ function connPtMask3M = getPatientOutline(scan3M,slicesV,outThreshold,minMaskSiz
 % scan3M = double(scan3M) - CToffset;
 % ptMask3M = getPatientOutline(scan3M,1:size(scan3M,3),0); %Returns mask for all slices by default
 %
+% fillFact - gap filling threshold factor
 % AI 7/13/19
 
 %% Set default values
@@ -19,6 +20,10 @@ end
 
 if ~exist('minMaskSiz','var')
     minMaskSiz = 1500;
+end
+
+if ~exist('fillFact','var') % constant factor multiple of computed thrshold for filling of holes
+    fillFact = 1.5;
 end
 
 %% Mask out couch
@@ -68,7 +73,7 @@ for n = 1:numel(slicesV)
             [keepIdxV,rowMaxV] = max(flipud(maskM));
             rowMaxIdx = size(binM,1) - min(rowMaxV(keepIdxV));
             sliceM(rowMaxIdx:end,:) = minInt;
-            thresh2M = sliceM > 1.5*threshold;
+            thresh2M = sliceM > fillFact*threshold;
             thresh2M = imfill(thresh2M,'holes');
             thresh2M = bwareaopen(thresh2M,200,8);
             thresh2M = imclose(thresh2M,strel('disk',3));
